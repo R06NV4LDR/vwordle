@@ -48,6 +48,7 @@ class Game {
         this.maxAttempts = 6;
         this.attempts = [];
         this.wordLength = 5;
+        this.winCount = 0;
         this.wordToGuess = (0, utils_1.chooseRandomWord)(this.wordLength);
     }
     start() {
@@ -56,6 +57,7 @@ class Game {
     }
     play() {
         return __awaiter(this, void 0, void 0, function* () {
+            let gameWon = false;
             while (this.attempts.length < this.maxAttempts) {
                 const guess = yield this.askForGuess();
                 if (guess && guess.length === this.wordLength) {
@@ -66,6 +68,7 @@ class Game {
                     console.log(`Feedback: ${this.colorizeFeedback(guess, feedback)}`);
                     if (guess === this.wordToGuess) {
                         console.log(chalk_1.default.green("Congratulations! You won!"));
+                        gameWon = true;
                         break;
                     }
                 }
@@ -73,7 +76,12 @@ class Game {
                     console.log(chalk_1.default.red("Invalid input. Please enter a word with 5 characters."));
                 }
             }
-            if (this.attempts.length === this.maxAttempts && this.wordToGuess !== this.attempts[this.attempts.length - 1]) {
+            if (gameWon) {
+                //if (this.attempts.length === this.maxAttempts && this.wordToGuess !== this.attempts[this.attempts.length - 1]) {
+                this.winCount++;
+                console.log(chalk_1.default.green(`You have won ${this.winCount} games!`));
+            }
+            else {
                 console.log(chalk_1.default.red(`You lost! The word was: ${this.wordToGuess}`));
             }
             rl.question("Do you want to play another game? (yes/no): ", (answer) => {

@@ -1,4 +1,4 @@
-import { chooseRandomWord, validateGuess } from "./utils";
+import {chooseRandomWord, validateGuess} from "./utils";
 import * as readline from "readline";
 import chalk from "chalk"; // Ensure chalk is imported for coloring
 
@@ -12,6 +12,7 @@ export class Game {
     private maxAttempts: number = 6;
     private attempts: string[] = [];
     private wordLength: number = 5;
+    private winCount: number = 0;
 
     constructor() {
         this.wordToGuess = chooseRandomWord(this.wordLength);
@@ -23,6 +24,7 @@ export class Game {
     }
 
     private async play() {
+        let gameWon = false;
         while (this.attempts.length < this.maxAttempts) {
             const guess = await this.askForGuess();
             if (guess && guess.length === this.wordLength) {
@@ -30,20 +32,24 @@ export class Game {
                 const feedback = validateGuess(this.wordToGuess, guess);
 
                 // Log the feedback for debugging
-              //  console.log("Feedback array:", feedback);  // Debugging line
+                //  console.log("Feedback array:", feedback);  // Debugging line
 
                 console.log(`Feedback: ${this.colorizeFeedback(guess, feedback)}`);
 
                 if (guess === this.wordToGuess) {
                     console.log(chalk.green("Congratulations! You won!"));
+                    gameWon = true;
                     break;
                 }
             } else {
                 console.log(chalk.red("Invalid input. Please enter a word with 5 characters."));
             }
         }
-
-        if (this.attempts.length === this.maxAttempts && this.wordToGuess !== this.attempts[this.attempts.length - 1]) {
+        if (gameWon) {
+            //if (this.attempts.length === this.maxAttempts && this.wordToGuess !== this.attempts[this.attempts.length - 1]) {
+            this.winCount++;
+            console.log(chalk.green(`You have won ${this.winCount} games!`));
+        } else {
             console.log(chalk.red(`You lost! The word was: ${this.wordToGuess}`));
         }
 
@@ -104,7 +110,6 @@ export class Game {
         this.wordToGuess = chooseRandomWord(this.wordLength);
     }
 }
-
 
 
 // import {chooseRandomWord, validateGuess} from "./utils";
