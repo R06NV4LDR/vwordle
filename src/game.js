@@ -48,7 +48,9 @@ class Game {
         this.maxAttempts = 6;
         this.attempts = [];
         this.wordLength = 5;
+        this.gameCount = 0;
         this.winCount = 0;
+        this._guessedLetters = new Map();
         this.wordToGuess = (0, utils_1.chooseRandomWord)(this.wordLength);
     }
     start() {
@@ -57,15 +59,19 @@ class Game {
     }
     play() {
         return __awaiter(this, void 0, void 0, function* () {
+            this.gameCount++;
             let gameWon = false;
             while (this.attempts.length < this.maxAttempts) {
+                console.log(this.renderKeyboard());
                 const guess = yield this.askForGuess();
                 if (guess && guess.length === this.wordLength) {
                     this.attempts.push(guess);
+                    this.updateGuessedLetters(guess);
                     const feedback = (0, utils_1.validateGuess)(this.wordToGuess, guess);
                     // Log the feedback for debugging
                     //  console.log("Feedback array:", feedback);  // Debugging line
                     console.log(`Feedback: ${this.colorizeFeedback(guess, feedback)}`);
+                    console.log(`Guessed letters: ${Array.from(this._guessedLetters).join(", ")}`);
                     if (guess === this.wordToGuess) {
                         console.log(chalk_1.default.green("Congratulations! You won!"));
                         gameWon = true;
@@ -102,6 +108,18 @@ class Game {
             });
         });
     }
+    updateGuessedLetters(guess) {
+        const feedback = (0, utils_1.validateGuess)(this.wordToGuess, guess);
+        for (let i = 0; i < guess.length; i++) {
+            this._guessedLetters.set(guess[i], feedback[i]);
+        }
+    }
+    get guessedLetters() {
+        return this._guessedLetters;
+    }
+    set guessedLetters(letters) {
+        this._guessedLetters = letters;
+    }
     // Colorize the feedback letters
     colorizeFeedback(guess, feedback) {
         let colorizedFeedback = "";
@@ -126,6 +144,35 @@ class Game {
         }
         return colorizedFeedback;
     }
+    renderKeyboard() {
+        const rows = [
+            "QWERTZUIOP",
+            " ASDFGHJKL",
+            "  YXCVBNM"
+        ];
+        let keyboard = "\n";
+        for (const row of rows) {
+            for (const letter of row) {
+                const color = this._guessedLetters.get(letter) || "white";
+                switch (color) {
+                    case "green":
+                        keyboard += chalk_1.default.green(letter) + " ";
+                        break;
+                    case "yellow":
+                        keyboard += chalk_1.default.yellow(letter) + " ";
+                        break;
+                    case "gray":
+                        keyboard += chalk_1.default.black(letter) + " ";
+                        break;
+                    default:
+                        keyboard += chalk_1.default.white(letter) + " ";
+                        break;
+                }
+            }
+            keyboard += "\n";
+        }
+        return keyboard;
+    }
     askForGuess() {
         return new Promise((resolve) => {
             rl.question("Enter your guess: ", (answer) => {
@@ -136,6 +183,7 @@ class Game {
     resetGame() {
         this.attempts = [];
         this.wordToGuess = (0, utils_1.chooseRandomWord)(this.wordLength);
+        this._guessedLetters.clear();
     }
 }
 exports.Game = Game;

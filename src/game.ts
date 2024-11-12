@@ -12,7 +12,9 @@ export class Game {
     private maxAttempts: number = 6;
     private attempts: string[] = [];
     private wordLength: number = 5;
+    private gameCount: number = 0;
     private winCount: number = 0;
+    private _guessedLetters: Map<string, string> = new Map();
 
     constructor() {
         this.wordToGuess = chooseRandomWord(this.wordLength);
@@ -24,17 +26,21 @@ export class Game {
     }
 
     private async play() {
+        this.gameCount++;
         let gameWon = false;
         while (this.attempts.length < this.maxAttempts) {
+            console.log(this.renderKeyboard());
             const guess = await this.askForGuess();
             if (guess && guess.length === this.wordLength) {
                 this.attempts.push(guess);
+                this.updateGuessedLetters(guess);
                 const feedback = validateGuess(this.wordToGuess, guess);
 
                 // Log the feedback for debugging
                 //  console.log("Feedback array:", feedback);  // Debugging line
 
                 console.log(`Feedback: ${this.colorizeFeedback(guess, feedback)}`);
+                console.log(`Guessed letters: ${Array.from(this._guessedLetters).join(", ")}`);
 
                 if (guess === this.wordToGuess) {
                     console.log(chalk.green("Congratulations! You won!"));
@@ -69,6 +75,21 @@ export class Game {
         });
     }
 
+    private updateGuessedLetters(guess: string): void {
+        const feedback = validateGuess(this.wordToGuess, guess);
+        for (let i = 0; i < guess.length; i++) {
+            this._guessedLetters.set(guess[i], feedback[i]);
+        }
+    }
+
+    get guessedLetters(): Map<string, string> {
+        return this._guessedLetters;
+    }
+
+    set guessedLetters(letters: Map<string, string>) {
+        this._guessedLetters = letters;
+    }
+
     // Colorize the feedback letters
     private colorizeFeedback(guess: string, feedback: string[]): string {
         let colorizedFeedback = "";
@@ -97,6 +118,39 @@ export class Game {
         return colorizedFeedback;
     }
 
+
+    private renderKeyboard(): string {
+        const rows = [
+            "QWERTZUIOP",
+            " ASDFGHJKL",
+            "  YXCVBNM"
+        ];
+
+        let keyboard = "\n";
+        for (const row of rows) {
+            for (const letter of row) {
+                const color = this._guessedLetters.get(letter) || "white";
+                switch (color) {
+                    case "green":
+                        keyboard += chalk.green(letter) + " ";
+                        break;
+                    case "yellow":
+                        keyboard += chalk.yellow(letter) + " ";
+                        break;
+                    case "gray":
+                        keyboard += chalk.black(letter) + " ";
+                        break;
+                    default:
+                        keyboard += chalk.white(letter) + " ";
+                        break;
+                }
+            }
+            keyboard += "\n";
+
+        }
+            return keyboard;
+    }
+
     private askForGuess(): Promise<string> {
         return new Promise((resolve) => {
             rl.question("Enter your guess: ", (answer) => {
@@ -108,7 +162,9 @@ export class Game {
     private resetGame(): void {
         this.attempts = [];
         this.wordToGuess = chooseRandomWord(this.wordLength);
+        this._guessedLetters.clear();
     }
+
 }
 
 
